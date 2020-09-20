@@ -50,3 +50,4 @@ summary(reg1)
 
 reg2 <- lm(fm2)
 summary(reg2)
+No habia entendido como llegar hasta aquí, pero despues de ver unos videos en youtube, ya le estoy entendiendo mas a github

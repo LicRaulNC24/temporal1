@@ -1,0 +1,319 @@
+\documentclass[a4paper]{article}
+\usepackage[spanish]{babel}
+\selectlanguage{spanish}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage{amsmath, amsthm, amsfonts}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\title{Primer examen parcial}
+\author{Raúl Núñez Camaño\\
+  \small Dr. Irving Llamosas\\
+  \small Maestría en Negocios y Estudios Económicos\\
+  \small Metodos cuantitativos de análisis II
+  \date{25 de octubre de 2020}
+}
+\setlength{\marginparwidth}{2cm}
+\begin{document}
+\maketitle
+\begin{abstract}
+El siguiente documento muestra la correlación entre una serie de variables independientes (x0, x1, x2, x3, x4, x5) y la variable dependiente (Luz) lo que se busca es encontrar que las variables dependientes tienen un relación directa con el nivel de luminosidad. A través del procesamiento de fotos satelitales nocturnas y la aplicación de métodos cuantitativos es posible transformar la medición de luminosidad en un indicador de actividad económica por localidad (IMCO, 2017)
+\end{abstract}
+\section{Introducci\'on}
+El uso de imágenes de luminosidad captada desde el espacio se ha vuelto cada vez más frecuente para estimar y/o analizar la actividad económica de distintas regiones del mundo.
+Usualmente, se ha utilizado esta información para tratar de estimar los niveles de producción de una economía. De manera alternativa, en este sentido se propone hacer uso de la información de luminosidad como una medida de los insumos de
+producción que utiliza una economía. Bajo esta interpretación, es posible calcular el nivel de actividad económica generado por la luminosidad (controlando también por la composición sectorial y la población) en las entidades federativas de México (Banco de México, 2019)
+\section{Desarrollo}
+\subsection{Cargar base de dato e instalación de paquetes necesarios}
+
+Datos = read.csv\verb)("examen1.csv"))
+
+install.packages("plm")
+
+library(plm)
+
+install.packages("ggplot2")
+
+library("plm")
+
+library("ggplot2")
+
+library(plm)
+
+library(lmtest)
+
+\subsection{Incorporar la base de datos (panel) en R, y declararla como panel.}
+
+Las técnicas de datos de panel se aplican a conjuntos de observaciones correspondientes a distintos individuos a lo largo del tiempo. Como consecuencia de las peculiaridades de estas bases de datos, se han desarrollado técnicas específicas de regresión que permitan captar la heterogeneidad entre distintos individuos así como la evolución de un mismo individuo a lo largo del tiempo.
+
+\vspace{5mm} 
+panel = pdata.frame(Datos, index = c)("clave", "t")
+
+\subsection{Realizar una tabla de estad\'isticas descriptivas de las variables.}
+
+\input{tabla 1}
+
+Estos datos surgen de la siguiente regresión: \\
+
+Reg1EF <- plm(luz ~ x0 + x1 + x2 + x3 + x4 + x5 + mes, data=panel, model="within")
+
+Teniendo en cuenta que son efectos fijos. \\
+
+A demás, la correlación no muestra los siguientes datos:\\
+
+Total Sum of Squares:    6.1184e+19
+
+Residual Sum of Squares: 1.1296e+18
+
+R-Squared:      0.98154
+
+Adj. R-Squared: 0.98123
+
+F-statistic: 1306690 on 6 and 147474 DF, p-value: < 2.22e-16.\\
+
+ El modelo muestra 2 variables (x0 y x5) que no tienen significancia en la explicación de los cambios de la variable dependiente, además, el resumen de esta regresión no muestra el intercepto, por lo que es válido pensar que existe algún problema con los datos. Ese problema puede ser por heterocedasticidad lo que quiere decir que la varianza de los errores no es constante en todas las observaciones realizadas. Incumpliendo los "requisitos" para un modelo lineal.
+\vspace{5mm} 
+
+Para corregir Heterocedasticidad
+Corrección1 = vcovHC(Reg1EF, type="HC0")
+\vspace{5mm} 
+
+\subsection{Realizar regresi\'on pooled-OLS}
+
+Reg2PooledOLS = lm(luz ~ x0 + x1 + x2 + x3 + x4 + x5 + mes, data=Datos)
+
+\input{tabla2}
+\vspace{5mm} 
+
+El modelo continua presentando una significancia irrelebante en las variables x0 y x5, por lo que seria prudente validar si la regresión es de efecto fijos o aleatorios.
+\vspace{5mm} 
+
+\subsection{Determinar si la regresi\'on es de efectos f\'ijos o aleatorios.}
+
+
+
+
+Efectos fijos
+\vspace{5mm}
+
+Una posibilidad es explicar los datos con el modelo de efectos fijos el cual considera que existe un término constante diferente para cada individuo y supone que los efectos individuales son independientes entre sí.  
+Con este modelo se considera que las variables explicativas afectan por igual a las unidades de corte transversal y que éstas se diferencian por características propias de cada una de ellas, medidas por medio del intercepto. Es por ello que los n interceptos se asocian con variables dummy con coeficientes específicos para cada unidad, los cuales se deben estimar.
+
+\vspace{5mm}
+Reg3EF = plm(luz ~ x0 + x1 + x2 + x3 + x4 + x5 + mes, data=Datos, index=c("clave", "t"), model="within
+\vspace{5mm} 
+
+\input{tabla3}
+\vspace{5mm} 
+
+Efectos aleatorios
+\vspace{5mm} 
+
+A diferencia del modelo de efectos fijos, el modelo de efectos aleatorios considera que los efectos individuales no son independientes entre sí, sino que están distribuidos aleatoriamente alrededor de un valor dado. Una práctica común en el análisis de regresión es asumir que el gran número de factores que afecta el valor de las variable dependiente pero que no han sido incluidas explícitamente como variables independientes del modelo, pueden resumirse apropiadamente en la perturbación aleatoria.  
+
+Así, con este modelo se considera que tanto el impacto de las variables explicativas como las características propias de cada unidad de corte transversal son diferentes.
+\vspace{5mm} 
+
+Reg4EA = plm(luz ~ x0 + x1 + x2 + x3 + x4 + x5 + mes, data=Datos, index=c("clave", "t"), model="random
+\vspace{5mm} 
+
+\input{tabla4}
+\vspace{5mm} 
+
+Los estimadores de efectos aleatorios son confiables bajo el supuesto de que las características individuales (heterogeneidad) son exógenas, es decir, son independientes con respecto a los regresores en la ecuación de efectos aleatorios. La misma prueba de Hausman para la endogeneidad que ya hemos utilizado en otro capítulo también se puede utilizar aquí, con la hipótesis nula de que los efectos aleatorios individuales son exógenos. La función de prueba phtest() compara los modelos de efectos fijos y de efectos aleatorios; las siguientes líneas de código estiman el modelo de efectos aleatorios y realizan la prueba de endogeneidad de Hausman. (Book down 2017)
+\vspace{5mm}
+
+phtest(Reg3EF, Reg4EA)
+\vspace{5mm} 
+
+data:  luz ~ x0 + x1 + x2 + x3 + x4 + x5 + mes
+
+chisq = 2803.9, df = 6, p-value < 2.2e-
+
+alternative hypothesis: one model is inconsistent
+\vspace{5mm}
+
+Utilizamos efectos fijos porque la prueba de HT arroja un valor significativo en P-value.
+\vspace{5mm} 
+
+\subsection{Probar si la base de datos tiene heteroscedasticidad, si la tiene, corregirla.}
+
+bptest(Reg3EF)
+\vspace{5mm} 
+
+Con base en el P-value podemos confirmar que existe heterocedasticidad. Un valor de p> 0.05 indica que la hipótesis nula (la varianza no cambia en el residual) puede rechazarse y, por lo tanto, existe heterscedasticidad.
+
+Corrección2 <- vcovHC(Reg3EF, type="HC0")
+
+\subsection{Que otras maneras de presentar las variables se te ocurren para que la Adj:R2 aumente de valor?
+Es v\'alida esa especificaci\'on? Justi\'ique.}
+
+La utilizaci
+
+Haciendo variable x4 Logaritmica y para introducirlos en la Base
+\vspace{5mm} 
+
+Datos$x4log <- log(Datos$x4)
+
+Datos$x5log <- log(Datos$x5)
+
+Datos$x0log <- log(Datos$x0)
+
+Datos$luzlog <- log(Datos$luz)
+\vspace{5mm} 
+
+Reglogx4 <- lm(luz ~ x0 + x1 + x2 + x3 + x4log + x5 + mes, data=Datos)
+
+\input{tabla5}
+\vspace{5mm} 
+
+Reglogx5 <- lm(luz ~ x0 + x1 + x2 + x3 + x4 + x5log + mes, data=Datos)
+\vspace{5mm} 
+
+\input{tabla6}
+\vspace{5mm} 
+
+Reglogx0 <- lm(luz ~ x0log + x1 + x2 + x3 + x4 + x5 + mes, data=Datos)
+\vspace{5mm} 
+
+\input{tabla7}
+\vspace{5mm} 
+
+Reglogx0x5 <- lm(luz~ x0log + x1 + x2 + x3 + x4 + x5log + mes, data=Datos)
+\vspace{5mm} 
+
+\input{tabla8}
+\vspace{5mm} 
+
+RegWx5 <- lm(luz ~ x0 + x1 + x2 + x3 + x4 + mes, data=Datos)
+\vspace{5mm} 
+
+\input{tabla9}
+\vspace{5mm} 
+
+En todos los modelos, la R cuadrada da .987 lo que significa que exite una correlación del 98.7 por ciento, donde tengo dudas es en las variables que no presentan significancia con el modelo, no pude austarlas para que tuvieran significancia.
+\section{C\'odigo}
+
+rm(list=ls())
+
+Raúl Núñez Camaño 
+
+Primer examen parcial 
+
+Metodos cuantitativos de analisis
+
+Datos <- read.csv("examen1.csv")
+
+install.packages("plm")
+
+install.packages("ggplot2")
+
+library("plm")
+
+library("ggplot2")
+
+Incorporar la base de datos (panel) en R, y declararla como panel.
+
+Panel <- pdata.frame(Datos, index = c("clave", "t"))
+
+Realizar una tabla de estadísticas descriptivas de las variables.
+
+Reg1EF <- plm(luz ~ x0 + x1 + x2 + x3 + x4 + x5 + mes, data=Panel, model="within")
+
+summary(Reg1EF)
+
+
+Para corregir Heterocedasticidad
+
+Corrección1 <- vcovHC(Reg1EF, type="HC0")
+
+summary(Corrección1)
+
+Realizar regresión pooled-OLS
+
+Reg2PooledOLS <- lm(luz ~ x0 + x1 + x2 + x3 + x4 + x5 + mes, data=Datos)
+
+summary(Reg2PooledOLS)
+
+Determinar si la regresión es de efectos fíjos o aleatorios.
+
+Efectos Fijos
+
+library(plm)
+
+Reg3EF <- plm(luz ~ x0 + x1 + x2 + x3 + x4 + x5 + mes, data=Datos, index=c("clave", "t"), model="within")
+
+summary(Reg3EF)
+
+Efectos Aleatorios
+
+Reg4EA <- plm(luz ~ x0 + x1 + x2 + x3 + x4 + x5 + mes, data=Datos, index=c("clave", "t"), model="random")
+
+summary(Reg4EA)
+
+phtest(Reg3EF, Reg4EA)
+
+Utilizamos efectos fijos porque la prueba de HT arroja un
+valor significativo en P-value
+
+Probar si la base de datos tiene heteroscedasticidad, si la tiene, corregirla.
+
+Prueba de Heterocedasticidad
+
+library(lmtest)
+
+bptest(Reg3EF)
+
+Con base en el P-value podemos confirmar que existe heterocedasticidad
+
+Para corregir HTCD
+
+Corrección2 <- vcovHC(Reg3EF, type="HC0")
+
+summary(Corrección2)
+
+Que otras maneras de presentar las variables se te ocurren para que la Adj:R2 aumente de valor?
+
+Es válida esa específcación? Justifíque.
+
+Haciendo variable x4 Logaritmica y para introducirlos en la Base
+
+Datos$x4log <- log(Datos$x4)
+Datos$x5log <- log(Datos$x5)
+Datos$x0log <- log(Datos$x0)
+Datos$luzlog <- log(Datos$luz)
+
+Reglogx4 <- lm(luz ~ x0 + x1 + x2 + x3 + x4log + x5 + mes, data=Datos)
+
+summary(Reglogx4)
+
+Reglogx5 <- lm(luz ~ x0 + x1 + x2 + x3 + x4 + x5log + mes, data=Datos)
+
+summary(Reglogx5)
+
+Reglogx0 <- lm(luz ~ x0log + x1 + x2 + x3 + x4 + x5 + mes, data=Datos)
+
+summary(Reglogx0)
+
+Reglogx0x5 <- lm(luz~ x0log + x1 + x2 + x3 + x4 + x5log + mes, data=Datos)
+
+summary(Reglogx0x5) 
+
+RegWx5 <- lm(luz ~ x0 + x1 + x2 + x3 + x4 + mes, data=Datos)
+
+summary(RegWx5)
+
+
+\section{Conclusi\'on}
+
+Fue frustrante usar LaTeX, pero no tan frustrante como Word
+
+\section{Referencias}
+Banco de México. (2019). Medición de la Productividad por Unidad de Luminosidad en las Entidades Federativas de México. 5–8.
+\vspace{5mm}
+
+IMCO. (2017). MEDICIÓN DE LA ACTIVIDAD ECONÓMICA CON GRANDES DATOS (MAGDA). Retrieved from https://imco.org.mx/medicion-de-la-actividad-economica-con-grandes-datos-magda/
+
+\end{document}
